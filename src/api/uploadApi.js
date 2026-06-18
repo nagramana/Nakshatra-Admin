@@ -6,7 +6,7 @@ export const uploadImage = async (file) => {
   formData.append("image", file);
 
   const response = await axios.post(
-    "http://localhost:5000/api/upload",
+    "https://nakshatra-mart-backend.onrender.com/api/upload",
     formData,
     {
       headers: {

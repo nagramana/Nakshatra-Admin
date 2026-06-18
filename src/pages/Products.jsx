@@ -31,7 +31,8 @@ function Products() {
 
   const { products, setProducts } = useProducts();
 
-  const [nextId, setNextId] = useState(1781790000003);
+  const [nextId, setNextId] =
+  useState(() => Date.now());
 
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");

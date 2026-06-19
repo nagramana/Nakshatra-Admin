@@ -3,63 +3,107 @@ import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
 
 function Returns() {
+const [returns, setReturns] =
+  useState([]);
+  // const [returns, setReturns] = useState(() => {
+  //   const savedReturns =
+  //     localStorage.getItem("returns");
 
-  const [returns, setReturns] = useState(() => {
-    const savedReturns =
-      localStorage.getItem("returns");
-
-    return savedReturns
-      ? JSON.parse(savedReturns)
-      : [
-          {
-            id: "RET001",
-            product: "Apple",
-            customer: "Ramana",
-            reason: "Damaged Product",
-            status: "Pending",
-          },
-          {
-            id: "RET002",
-            product: "Milk",
-            customer: "Kiran",
-            reason: "Wrong Item",
-            status: "Pending",
-          },
-        ];
-  });
+  //   return savedReturns
+  //     ? JSON.parse(savedReturns)
+  //     : [
+  //         {
+  //           id: "RET001",
+  //           product: "Apple",
+  //           customer: "Ramana",
+  //           reason: "Damaged Product",
+  //           status: "Pending",
+  //         },
+  //         {
+  //           id: "RET002",
+  //           product: "Milk",
+  //           customer: "Kiran",
+  //           reason: "Wrong Item",
+  //           status: "Pending",
+  //         },
+  //       ];
+  // });
 
   const [message, setMessage] =
     useState("");
 
-  useEffect(() => {
-    localStorage.setItem(
-      "returns",
-      JSON.stringify(returns)
+    useEffect(() => {
+  const orders =
+    JSON.parse(
+      localStorage.getItem(
+        "orders"
+      )
+    ) || [];
+
+  const returnOrders =
+    orders.filter(
+      (order) =>
+        order.returnRequested
     );
-  }, [returns]);
+
+  setReturns(returnOrders);
+}, []);
+
+  // useEffect(() => {
+  //   localStorage.setItem(
+  //     "returns",
+  //     JSON.stringify(returns)
+  //   );
+  // }, [returns]);
 
   const updateStatus = (
-    id,
-    status
-  ) => {
-    setReturns(
-      returns.map((item) =>
-        item.id === id
-          ? {
-              ...item,
-              status,
-            }
-          : item
+  id,
+  status
+) => {
+  const orders =
+    JSON.parse(
+      localStorage.getItem(
+        "orders"
       )
+    ) || [];
+
+  const updatedOrders =
+    orders.map((order) =>
+      order.id === id
+        ? {
+            ...order,
+            returnStatus:
+              status,
+            orderStatus:
+              status ===
+              "Approved"
+                ? "Order Returned"
+                : order.orderStatus,
+          }
+        : order
     );
 
-    setMessage(
-      `✅ Return ${status}`
-    );
+  localStorage.setItem(
+    "orders",
+    JSON.stringify(
+      updatedOrders
+    )
+  );
 
-    setTimeout(() => {
-      setMessage("");
-    }, 3000);
+  setReturns(
+  updatedOrders.filter(
+    (order) =>
+      order.returnRequested === true
+  )
+);
+
+setMessage(
+  `✅ Return ${status}`
+);
+
+setTimeout(() => {
+  setMessage("");
+}, 3000);
   };
 
   return (
@@ -112,8 +156,8 @@ function Returns() {
                 {
                   returns.filter(
                     (r) =>
-                      r.status ===
-                      "Pending"
+                      r.returnStatus ===
+"Pending"
                   ).length
                 }
               </h2>
@@ -125,8 +169,9 @@ function Returns() {
                 {
                   returns.filter(
                     (r) =>
-                      r.status ===
-                      "Approved"
+                      r.returnStatus ===
+"Approved"
+
                   ).length
                 }
               </h2>
@@ -138,8 +183,8 @@ function Returns() {
                 {
                   returns.filter(
                     (r) =>
-                      r.status ===
-                      "Rejected"
+                      r.returnStatus ===
+"Rejected"
                   ).length
                 }
               </h2>
@@ -190,39 +235,31 @@ function Returns() {
                       </td>
 
                       <td>
-                        {
-                          item.product
-                        }
-                      </td>
+  {item.items?.[0]?.name ||
+    "Product"}
+</td>
 
                       <td>
-                        {
-                          item.customer
-                        }
-                      </td>
+  {item.customer?.name}
+</td>
 
                       <td>
-                        {
-                          item.reason
-                        }
-                      </td>
-
+  {item.returnReason}
+</td>
                       <td>
                         <span
-                          className={
-                            item.status ===
-                            "Approved"
-                              ? "status-approved"
-                              : item.status ===
-                                "Rejected"
-                              ? "status-rejected"
-                              : "status-pending"
-                          }
-                        >
-                          {
-                            item.status
-                          }
-                        </span>
+  className={
+    item.returnStatus ===
+    "Approved"
+      ? "status-approved"
+      : item.returnStatus ===
+        "Rejected"
+      ? "status-rejected"
+      : "status-pending"
+  }
+>
+  {item.returnStatus}
+</span>
                       </td>
 
                       <td>

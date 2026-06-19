@@ -86,24 +86,39 @@ function Orders() {
 
   const totalOrders = orders.length;
 
-  const deliveredOrders = orders.filter(
-    (order) => order.status === "Delivered"
+  const deliveredOrders =
+  orders.filter(
+    (order) =>
+      (
+        order.orderStatus ||
+        order.status
+      ) === "Delivered"
   ).length;
 
   const processingOrders = orders.filter(
     (order) => order.status === "Processing"
   ).length;
 
-  const shippedOrders = orders.filter(
-    (order) => order.status === "Shipped"
+  const shippedOrders =
+  orders.filter(
+    (order) =>
+      (
+        order.orderStatus ||
+        order.status
+      ) === "Shipped"
   ).length;
 
   const pendingOrders = orders.filter(
     (order) => order.status === "Pending"
   ).length;
 
-  const cancelledOrders = orders.filter(
-    (order) => order.status === "Cancelled"
+  const cancelledOrders =
+  orders.filter(
+    (order) =>
+      (
+        order.orderStatus ||
+        order.status
+      ) === "Cancelled"
   ).length;
 
   // ==========================
@@ -112,24 +127,44 @@ function Orders() {
 
 
 
-  const updateStatus = (id, newStatus) => {
-    const updatedOrders =
-      orders.map((order) =>
-        order.id === id
-          ? {
+  // const updateStatus = (id, newStatus) => {
+  //   const updatedOrders =
+  //     orders.map((order) =>
+  //       order.id === id
+  //         ? {
+  //           ...order,
+  //           status: newStatus,
+  //         }
+  //         : order
+  //     );
+
+
+  
+
+  const updateStatus = (
+  id,
+  newStatus
+) => {
+  const updatedOrders =
+    orders.map((order) =>
+      order.id === id
+        ? {
             ...order,
             status: newStatus,
+            orderStatus:
+              newStatus,
           }
-          : order
-      );
-
-    setOrders(updatedOrders);
-
-    localStorage.setItem(
-      "orders",
-      JSON.stringify(updatedOrders)
+        : order
     );
-  };
+
+  setOrders(updatedOrders);
+
+  localStorage.setItem(
+    "orders",
+    JSON.stringify(updatedOrders)
+  );
+};
+
   const deleteOrder = (id) => {
     setOrders(
       orders.filter(
@@ -178,7 +213,11 @@ function Orders() {
     )
     .reduce((total, order) => {
       const amount = Number(
-        String(order.amount || 0)
+        String(
+          order.total ||
+          order.amount ||
+          0
+        )
           .replace("₹", "")
           .replace(",", "")
       );
@@ -338,7 +377,11 @@ function Orders() {
                         .includes(
                           search.toLowerCase()
                         ) ||
-                      String(order.customer)
+                      (
+                        typeof order.customer === "object"
+                          ? order.customer?.name || ""
+                          : order.customer || ""
+                      )
                         .toLowerCase()
                         .includes(search.toLowerCase())
                   )
@@ -346,43 +389,40 @@ function Orders() {
                     <tr key={order.id}>
                       <td>{order.id}</td>
 
-                      <td>{order.customer}</td>
+                      <td>
+                        {typeof order.customer === "object"
+                          ? order.customer?.name
+                          : order.customer}
+                      </td>
 
                       <td>
-                        {order.amount}
+                        ₹
+                        {order.total
+                          ? order.total.toFixed(2)
+                          : order.amount}
                       </td>
 
                       <td>
                         <select
-                          className="status-select"
-                          value={order.status}
-                          onChange={(e) =>
-                            updateStatus(
-                              order.id,
-                              e.target.value
-                            )
-                          }
-                        >
-                          <option>
-                            Pending
-                          </option>
-
-                          <option>
-                            Processing
-                          </option>
-
-                          <option>
-                            Shipped
-                          </option>
-
-                          <option>
-                            Delivered
-                          </option>
-
-                          <option>
-                            Cancelled
-                          </option>
-                        </select>
+  className="status-select"
+  value={
+    order.orderStatus ||
+    order.status
+  }
+  onChange={(e) =>
+    updateStatus(
+      order.id,
+      e.target.value
+    )
+  }
+>
+  <option>Order Placed</option>
+  <option>Confirmed</option>
+  <option>Shipped</option>
+  <option>Delivered</option>
+  <option>Order Returned</option>
+  <option>Cancelled</option>
+</select>
                       </td>
 
                       <td>
@@ -425,35 +465,54 @@ function Orders() {
                   </p>
 
                   <p>
-                    <strong>Customer:</strong>
-                    {" "}
-                    {selectedOrder.customer}
+                    <strong>Customer:</strong>{" "}
+                    {typeof selectedOrder.customer === "object"
+                      ? selectedOrder.customer?.name
+                      : selectedOrder.customer}
                   </p>
 
                   <p>
-                    <strong>Phone:</strong>
-                    {" "}
-                    {selectedOrder.phone}
+                    <strong>Phone:</strong>{" "}
+                    {selectedOrder.customer?.phone ||
+                      selectedOrder.phone}
                   </p>
 
                   <p>
-                    <strong>Address:</strong>
-                    {" "}
-                    {selectedOrder.address}
+                    <strong>Address:</strong>{" "}
+                    {selectedOrder.customer?.address ||
+                      selectedOrder.address}
                   </p>
 
                   <p>
-                    <strong>Payment:</strong>
-                    {" "}
-                    {selectedOrder.payment}
+                    <strong>Payment:</strong>{" "}
+                    {selectedOrder.paymentMethod ||
+                      selectedOrder.payment}
                   </p>
 
                   <p>
-                    <strong>Amount:</strong>
-                    {" "}
-                    {selectedOrder.amount}
+                    <strong>Amount:</strong>{" "}
+                    ₹
+                    {selectedOrder.total
+                      ? selectedOrder.total.toFixed(2)
+                      : selectedOrder.amount}
                   </p>
 
+
+                  <p>
+                    <strong>
+                      Return Status:
+                    </strong>{" "}
+                    {selectedOrder.returnStatus ||
+                      "No Request"}
+                  </p>
+
+                  <p>
+                    <strong>
+                      Return Reason:
+                    </strong>{" "}
+                    {selectedOrder.returnReason ||
+                      "-"}
+                  </p>
                   <h3>Products</h3>
 
                   {selectedOrder?.items &&
@@ -486,7 +545,7 @@ function Orders() {
                             <h4>{item.name}</h4>
 
                             <p>
-                              Qty: {item.qty}
+                              Qty: {item.quantity || item.qty}
                             </p>
 
                             <p>
@@ -507,14 +566,100 @@ function Orders() {
                     </p>
                   )}
 
-                  <button
-                    className="close-btn"
-                    onClick={() =>
-                      setSelectedOrder(null)
-                    }
-                  >
-                    Close
-                  </button>
+                  
+
+                  {selectedOrder.returnRequested &&
+                    selectedOrder.returnStatus ===
+                    "Pending" && (
+                      <div
+                        style={{
+                          marginTop: "15px",
+                          display: "flex",
+                          gap: "10px",
+                        }}
+                      >
+                        <button
+                          className="btn btn-success"
+                          onClick={() => {
+                            updateStatus(
+                              selectedOrder.id,
+                              "Order Returned"
+                            );
+
+                            const updatedOrders =
+                              orders.map(
+                                (order) =>
+                                  order.id ===
+                                    selectedOrder.id
+                                    ? {
+                                      ...order,
+                                      returnStatus:
+                                        "Approved",
+                                    }
+                                    : order
+                              );
+
+                            setOrders(
+  updatedOrders
+);
+
+setSelectedOrder({
+  ...selectedOrder,
+  returnStatus:
+    "Rejected",
+});
+
+localStorage.setItem(
+  "orders",
+  JSON.stringify(
+    updatedOrders
+  )
+);
+                          }}
+                        >
+                          Approve Return
+                        </button>
+
+                        <button
+                          className="btn btn-danger"
+                          onClick={() => {
+                            const updatedOrders =
+                              orders.map(
+                                (order) =>
+                                  order.id ===
+                                    selectedOrder.id
+                                    ? {
+                                      ...order,
+                                      returnStatus:
+                                        "Rejected",
+                                    }
+                                    : order
+                              );
+
+                            setOrders(
+                              updatedOrders
+                            );
+
+                            localStorage.setItem(
+                              "orders",
+                              JSON.stringify(
+                                updatedOrders
+                              )
+                            );
+                          }}
+                        >
+                          Reject Return
+                        </button>
+                      </div>
+                    )}
+                    <button
+  className="close-btn"
+  onClick={() =>
+    setSelectedOrder(null)
+  }
+>
+  Close
+</button>
 
                 </div>
 

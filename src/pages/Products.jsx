@@ -1,4 +1,5 @@
-import { useState } from "react";
+import axios from "axios";
+import { useState, useEffect } from "react";
 import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
 import { uploadImage } from "../api/uploadApi";
@@ -6,6 +7,8 @@ import { useProducts } from "../context/ProductContext";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
+const API_URL =
+  "https://nakshatra-mart-backend.onrender.com";
 
 function Products() {
   // const [products, setProducts] = useState([
@@ -29,16 +32,43 @@ function Products() {
   //   },
   // ]);
 
-  const { products, setProducts } = useProducts();
+  const { products, setProducts } =
+    useProducts();
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const fetchProducts = async () => {
+  try {
+    const response = await axios.get(
+      `${API_URL}/api/products`
+    );
+
+    setProducts(response.data);
+  } catch (error) {
+    console.log(
+      "Error Fetching Products",
+      error
+    );
+  }
+};
 
   const [nextId, setNextId] =
-  useState(() => Date.now());
+    useState(() => Date.now());
 
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
   const [stock, setStock] = useState("");
   const [category, setCategory] = useState("");
 
+
+
+  const [discount, setDiscount] =
+    useState("0% OFF");
+
+  const [description, setDescription] =
+    useState("");
   const [categories, setCategories] = useState([
     "Fruits",
     "Vegetables",
@@ -55,6 +85,9 @@ function Products() {
 
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState("");
+
+  const [selectedProduct, setSelectedProduct] =
+    useState(null);
 
   const activeProducts = products.filter(
     (product) => product.stock > 0
@@ -196,19 +229,36 @@ function Products() {
 
       const newProduct = {
         id: String(nextId),
+
         name,
+
         price: Number(price),
+
         stock: Number(stock),
+
         initialStock: Number(stock),
+
         category,
+
         image: imageUrl,
+
+        discount,
+
+        description,
+
         createdAt: new Date().toISOString(),
       };
+      // setProducts([
+      //   ...products,
+      //   newProduct,
+      // ]);
 
-      setProducts([
-        ...products,
-        newProduct,
-      ]);
+     await axios.post(
+  `${API_URL}/api/products`,
+  newProduct
+);
+
+      fetchProducts();
 
       setNextId(nextId + 1);
 
@@ -228,6 +278,12 @@ function Products() {
       setCategory("");
       setImage("");
       setSelectedFile(null);
+
+
+
+      setDiscount("0% OFF");
+
+      setDescription("");
     } catch (error) {
       console.error(error);
 
@@ -240,25 +296,29 @@ function Products() {
   };
 
 
-  const deleteProduct = (id) => {
-    setProducts(
-      products.filter(
-        (product) =>
-          product.id !== id
-      )
-    );
+  const deleteProduct = async (id) => {
+    try {
+      await axios.delete(
+        `${API_URL}/api/products/${id}`
+      );
+      fetchProducts();
 
-    setMessage(
-      "🗑 Product Deleted Successfully"
-    );
+      setMessage(
+        "🗑 Product Deleted Successfully"
+      );
 
-    setMessageType("error");
+      setMessageType("success");
 
-    setTimeout(() => {
-      setMessage("");
-    }, 3000);
+    } catch (error) {
+      console.error(error);
+
+      setMessage(
+        "❌ Delete Failed"
+      );
+
+      setMessageType("error");
+    }
   };
-
   const editProduct = (product) => {
     setName(product.name);
     setPrice(product.price);
@@ -266,41 +326,69 @@ function Products() {
     setCategory(product.category);
     setImage(product.image);
 
-    setEditId(product.id);
+    setDiscount(
+      product.discount || "0% OFF"
+    );
+
+    setDescription(
+      product.description || ""
+    );
+
+    setEditId(product._id);
+
     setIsEditing(true);
   };
 
-  const updateProduct = () => {
-    setProducts(
-      products.map((product) =>
-        product.id === editId
-          ? {
-            ...product,
-            name,
-            price,
-            stock,
-            category,
-            image,
-          }
-          : product
-      )
-    );
+  const updateProduct = async () => {
+    try {
+      await axios.put(
+        `${API_URL}/api/products/${editId}`,
+        {
+          name,
+          price,
+          stock,
+          category,
+          discount,
+          description,
+          image,
+        }
+      );
 
-    setMessage("✅ Product Updated Successfully");
-    setMessageType("success");
+      fetchProducts();
 
-    setTimeout(() => {
-      setMessage("");
-    }, 3000);
+      setMessage(
+        "✅ Product Updated Successfully"
+      );
 
-    setName("");
-    setPrice("");
-    setStock("");
-    setCategory("");
-    setImage("");
+      setMessageType("success");
 
-    setEditId(null);
-    setIsEditing(false);
+      setTimeout(() => {
+        setMessage("");
+      }, 3000);
+
+      setName("");
+      setPrice("");
+      setStock("");
+      setCategory("");
+      setImage("");
+      setDescription("");
+
+      setEditId(null);
+      setIsEditing(false);
+
+    } catch (error) {
+      console.log(error);
+
+      setMessage(
+        "❌ Product Update Failed"
+      );
+
+      setMessageType("error");
+
+      setTimeout(() => {
+        setMessage("");
+      }, 3000);
+    }
   };
 
 
@@ -695,7 +783,7 @@ function Products() {
                 style={{
                   display: "grid",
                   gridTemplateColumns:
-                    "2fr 1fr 1fr 1fr 2fr auto",
+                    "2fr 1fr 1fr 1fr 2fr 2fr",
                   gap: "15px",
                   alignItems: "center",
                 }}
@@ -748,11 +836,19 @@ function Products() {
                 </select>
 
                 <input
+                  type="text"
+                  placeholder="Description"
+                  value={description}
+                  onChange={(e) =>
+                    setDescription(e.target.value)
+                  }
+                />
+
+                <input
                   type="file"
                   accept="image/*"
                   onChange={(e) => {
-                    const file =
-                      e.target.files[0];
+                    const file = e.target.files[0];
 
                     if (file) {
                       setSelectedFile(file);
@@ -764,7 +860,15 @@ function Products() {
                     }
                   }}
                 />
+              </div>
 
+              <div
+                style={{
+                  marginTop: "20px",
+                  display: "flex",
+                  justifyContent: "flex-start",
+                }}
+              >
                 {isEditing ? (
                   <button
                     onClick={updateProduct}
@@ -772,12 +876,13 @@ function Products() {
                       background: "#22c55e",
                       color: "#fff",
                       border: "none",
-                      padding: "12px 18px",
-                      borderRadius: "8px",
+                      padding: "12px 25px",
+                      borderRadius: "10px",
                       cursor: "pointer",
+                      fontWeight: "600",
                     }}
                   >
-                    Save
+                    Save Product
                   </button>
                 ) : (
                   <button
@@ -787,8 +892,8 @@ function Products() {
                       background: "#082A78",
                       color: "#fff",
                       border: "none",
-                      padding: "12px 18px",
-                      borderRadius: "8px",
+                      padding: "12px 25px",
+                      borderRadius: "10px",
                       cursor: "pointer",
                       fontWeight: "600",
                     }}
@@ -922,28 +1027,121 @@ function Products() {
                     </td>
 
                     <td>
-                      <button
-                        className="edit-btn"
-                        onClick={() =>
-                          editProduct(product)
-                        }
-                      >
-                        ✏ Edit
-                      </button>
+                      <td>
+  <div
+    style={{
+      display: "flex",
+      gap: "8px",
+      alignItems: "center",
+    }}
+  >
+                          <button
+                            className="view-btn"
+                            onClick={() =>
+                              setSelectedProduct(product)
+                            }
+                          >
+                            👁 View
+                          </button>
 
-                      <button
-                        className="delete-btn"
-                        onClick={() =>
-                          deleteProduct(product.id)
-                        }
-                      >
-                        🗑 Delete
-                      </button>
+                          <button
+                            className="edit-btn"
+                            onClick={() =>
+                              editProduct(product)
+                            }
+                          >
+                            ✏ Edit
+                          </button>
+
+                          <button
+                            className="delete-btn"
+                            onClick={() =>
+                              deleteProduct(product._id)
+                            }
+                          >
+                            🗑 Delete
+                          </button>
+                        </div>
+                      </td>
                     </td>
                   </tr>
                 ))}
             </tbody>
           </table>
+          {selectedProduct && (
+            <div className="modal-overlay">
+
+              <div className="product-modal">
+
+                <h2>
+                  Product Details
+                </h2>
+
+                <img
+                  src={selectedProduct.image}
+                  alt={selectedProduct.name}
+                  style={{
+                    width: "180px",
+                    height: "180px",
+                    objectFit: "cover",
+                    borderRadius: "12px",
+                    marginBottom: "20px",
+                  }}
+                />
+
+                <p>
+                  <strong>ID:</strong>{" "}
+                  {selectedProduct.id}
+                </p>
+
+                <p>
+                  <strong>Name:</strong>{" "}
+                  {selectedProduct.name}
+                </p>
+
+                <p>
+                  <strong>Category:</strong>{" "}
+                  {selectedProduct.category}
+                </p>
+
+                <p>
+                  <strong>Price:</strong> ₹
+                  {selectedProduct.price}
+                </p>
+
+                <p>
+                  <strong>Stock:</strong>{" "}
+                  {selectedProduct.stock}
+                </p>
+
+                <p>
+                  <strong>Description:</strong>{" "}
+                  {selectedProduct.description ||
+                    "No Description"}
+                </p>
+
+                <p>
+                  <strong>Created Date:</strong>{" "}
+                  {selectedProduct.createdAt
+                    ? new Date(
+                      selectedProduct.createdAt
+                    ).toLocaleString()
+                    : "N/A"}
+                </p>
+
+                <button
+                  className="close-btn"
+                  onClick={() =>
+                    setSelectedProduct(null)
+                  }
+                >
+                  Close
+                </button>
+
+              </div>
+
+            </div>
+          )}
         </div>
       </div>
     </div>

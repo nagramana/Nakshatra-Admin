@@ -13,6 +13,7 @@ import Orders from "./pages/Orders";
 import Products from "./pages/Products";
 import Returns from "./pages/Returns";
 import Users from "./pages/Users";
+import Ads from "./pages/Ads";
 import Notifications from "./pages/Notifications";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
@@ -53,10 +54,12 @@ function RestorePage() {
 function App() {
   return (
     <BrowserRouter>
+
       <RouteTracker />
       <RestorePage />
 
       <Routes>
+
         <Route
           path="/"
           element={<Dashboard />}
@@ -83,6 +86,11 @@ function App() {
         />
 
         <Route
+          path="/ads"
+          element={<Ads />}
+        />
+
+        <Route
           path="/notifications"
           element={<Notifications />}
         />
@@ -96,7 +104,9 @@ function App() {
           path="/settings"
           element={<Settings />}
         />
+
       </Routes>
+
     </BrowserRouter>
   );
 }

@@ -326,3 +326,27 @@
   border-radius: 8px;
   cursor: pointer;
 }
+
+.table-card,
+.product-table-card {
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: 600px;
+  width: 100%;
+}
+
+.order-table {
+  min-width: 1000px;
+}
+
+.order-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: white;
+}
+
+.order-table th,
+.order-table td {
+  white-space: nowrap;
+}

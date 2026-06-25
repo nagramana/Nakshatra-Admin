@@ -1,24 +1,24 @@
 function RecentOrders() {
-  const orders = [
-    {
-      id: "#1001",
-      customer: "Ramana",
-      amount: "₹1200",
-      status: "Delivered",
-    },
-    {
-      id: "#1002",
-      customer: "Kiran",
-      amount: "₹850",
-      status: "Processing",
-    },
-    {
-      id: "#1003",
-      customer: "Ravi",
-      amount: "₹2500",
-      status: "Shipped",
-    },
-  ];
+  // const orders = [
+  //   {
+  //     id: "#1001",
+  //     customer: "Ramana",
+  //     amount: "₹1200",
+  //     status: "Delivered",
+  //   },
+  //   {
+  //     id: "#1002",
+  //     customer: "Kiran",
+  //     amount: "₹850",
+  //     status: "Processing",
+  //   },
+  //   {
+  //     id: "#1003",
+  //     customer: "Ravi",
+  //     amount: "₹2500",
+  //     status: "Shipped",
+  //   },
+  // ];
 
   return (
     <div

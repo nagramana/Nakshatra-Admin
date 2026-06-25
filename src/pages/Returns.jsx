@@ -1,10 +1,22 @@
+import axios from "axios";
 import { useState, useEffect } from "react";
 import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
 
 function Returns() {
-const [returns, setReturns] =
-  useState([]);
+  const [returns, setReturns] =
+    useState([]);
+
+  const [currentPage, setCurrentPage] =
+    useState(1);
+
+  const [message, setMessage] =
+    useState("");
+
+  const returnsPerPage = 10;
+
+
+
   // const [returns, setReturns] = useState(() => {
   //   const savedReturns =
   //     localStorage.getItem("returns");
@@ -29,25 +41,32 @@ const [returns, setReturns] =
   //       ];
   // });
 
-  const [message, setMessage] =
-    useState("");
 
-    useEffect(() => {
-  const orders =
-    JSON.parse(
-      localStorage.getItem(
-        "orders"
-      )
-    ) || [];
 
-  const returnOrders =
-    orders.filter(
-      (order) =>
-        order.returnRequested
-    );
 
-  setReturns(returnOrders);
-}, []);
+  useEffect(() => {
+    fetchReturns();
+  }, []);
+
+  const fetchReturns =
+    async () => {
+      try {
+        const response =
+          await axios.get(
+            "https://nakshatra-mart-backend.onrender.com/api/orders"
+          );
+
+        const returnOrders =
+          response.data.filter(
+            (order) =>
+              order.returnRequested === true
+          );
+
+        setReturns(returnOrders);
+      } catch (error) {
+        console.log(error);
+      }
+    };
 
   // useEffect(() => {
   //   localStorage.setItem(
@@ -56,55 +75,54 @@ const [returns, setReturns] =
   //   );
   // }, [returns]);
 
-  const updateStatus = (
-  id,
-  status
-) => {
-  const orders =
-    JSON.parse(
-      localStorage.getItem(
-        "orders"
-      )
-    ) || [];
+    const updateStatus = async (
+    id,
+    status
+  ) => {
+    try {
+      if (
+        status === "Approved"
+      ) {
+        await axios.put(
+          `https://nakshatra-mart-backend.onrender.com/api/orders/approve-return/${id}`
+        );
+      } else {
+        await axios.put(
+          `https://nakshatra-mart-backend.onrender.com/api/orders/reject-return/${id}`
+        );
+      }
 
-  const updatedOrders =
-    orders.map((order) =>
-      order.id === id
-        ? {
-            ...order,
-            returnStatus:
-              status,
-            orderStatus:
-              status ===
-              "Approved"
-                ? "Order Returned"
-                : order.orderStatus,
-          }
-        : order
+      fetchReturns();
+
+      setMessage(
+        `✅ Return ${status}`
+      );
+
+      setTimeout(() => {
+        setMessage("");
+      }, 3000);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const indexOfLastReturn =
+    currentPage * returnsPerPage;
+
+  const indexOfFirstReturn =
+    indexOfLastReturn -
+    returnsPerPage;
+
+  const currentReturns =
+    returns.slice(
+      indexOfFirstReturn,
+      indexOfLastReturn
     );
 
-  localStorage.setItem(
-    "orders",
-    JSON.stringify(
-      updatedOrders
-    )
+  const totalPages = Math.ceil(
+    returns.length /
+    returnsPerPage
   );
-
-  setReturns(
-  updatedOrders.filter(
-    (order) =>
-      order.returnRequested === true
-  )
-);
-
-setMessage(
-  `✅ Return ${status}`
-);
-
-setTimeout(() => {
-  setMessage("");
-}, 3000);
-  };
 
   return (
     <div className="dashboard-layout">
@@ -157,7 +175,7 @@ setTimeout(() => {
                   returns.filter(
                     (r) =>
                       r.returnStatus ===
-"Pending"
+                      "Pending"
                   ).length
                 }
               </h2>
@@ -170,7 +188,7 @@ setTimeout(() => {
                   returns.filter(
                     (r) =>
                       r.returnStatus ===
-"Approved"
+                      "Approved"
 
                   ).length
                 }
@@ -184,7 +202,7 @@ setTimeout(() => {
                   returns.filter(
                     (r) =>
                       r.returnStatus ===
-"Rejected"
+                      "Rejected"
                   ).length
                 }
               </h2>
@@ -194,72 +212,70 @@ setTimeout(() => {
 
           {/* Table */}
 
-          <div className="product-table-card">
+          <div
+            className="product-table-card"
+            style={{
+              overflowX: "auto",
+              overflowY: "auto",
+              maxHeight: "600px",
+            }}
+          >
 
             <table className="order-table">
 
               <thead>
-                <tr>
-                  <th>
-                    Return ID
-                  </th>
-                  <th>
-                    Product
-                  </th>
-                  <th>
-                    Customer
-                  </th>
-                  <th>
-                    Reason
-                  </th>
-                  <th>
-                    Status
-                  </th>
-                  <th>
-                    Action
-                  </th>
-                </tr>
-              </thead>
+    <tr>
+      <th>S.No</th>
+      <th>Return ID</th>
+      <th>Product</th>
+      <th>Customer</th>
+      <th>Reason</th>
+      <th>Status</th>
+      <th>Action</th>
+    </tr>
+  </thead>
 
               <tbody>
 
-                {returns.map(
-                  (item) => (
-                    <tr
-                      key={
-                        item.id
-                      }
-                    >
+                {currentReturns.map(
+                  (item, index) => (
+                    <tr key={item._id}>
+                      <td>
+                        {(currentPage - 1) *
+                          returnsPerPage +
+                          index +
+                          1}
+                      </td>
                       <td>
                         {item.id}
                       </td>
 
                       <td>
-  {item.items?.[0]?.name ||
-    "Product"}
-</td>
+                        {item.items?.[0]?.name ||
+                          "Product"}
+                      </td>
 
                       <td>
-  {item.customer?.name}
-</td>
+                        {item.customer?.name}
+                      </td>
 
                       <td>
-  {item.returnReason}
-</td>
+                        {item.returnReason}
+                      </td>
                       <td>
                         <span
-  className={
-    item.returnStatus ===
-    "Approved"
-      ? "status-approved"
-      : item.returnStatus ===
-        "Rejected"
-      ? "status-rejected"
-      : "status-pending"
-  }
->
-  {item.returnStatus}
-</span>
+                          className={
+                            item.returnStatus ===
+                              "Approved"
+                              ? "status-approved"
+                              : item.returnStatus ===
+                                "Rejected"
+                                ? "status-rejected"
+                                : "status-pending"
+                          }
+                        >
+                          {item.returnStatus}
+                        </span>
                       </td>
 
                       <td>
@@ -268,7 +284,7 @@ setTimeout(() => {
                           className="approve-btn"
                           onClick={() =>
                             updateStatus(
-                              item.id,
+                              item._id,
                               "Approved"
                             )
                           }
@@ -280,7 +296,7 @@ setTimeout(() => {
                           className="reject-btn"
                           onClick={() =>
                             updateStatus(
-                              item.id,
+                              item._id,
                               "Rejected"
                             )
                           }
@@ -292,12 +308,64 @@ setTimeout(() => {
 
                     </tr>
                   )
+
                 )}
 
               </tbody>
 
             </table>
 
+            <p
+              style={{
+                marginTop: "20px",
+                fontWeight: "600",
+              }}
+            >
+              Total Returns:
+              {returns.length}
+            </p>
+
+            <div
+              style={{
+                display: "flex",
+                justifyContent:
+                  "center",
+                alignItems: "center",
+                gap: "10px",
+                marginTop: "15px",
+              }}
+            >
+              <button
+                onClick={() =>
+                  setCurrentPage(
+                    currentPage - 1
+                  )
+                }
+                disabled={currentPage === 1}
+                className="btn btn-secondary"
+              >
+                Previous
+              </button>
+
+              <span>
+                Page {currentPage} of{" "}
+                {totalPages}
+              </span>
+
+              <button
+                onClick={() =>
+                  setCurrentPage(
+                    currentPage + 1
+                  )
+                }
+                disabled={
+                  currentPage === totalPages
+                }
+                className="btn btn-secondary"
+              >
+                Next
+              </button>
+            </div>
           </div>
 
         </div>

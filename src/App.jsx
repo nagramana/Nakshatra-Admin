@@ -13,6 +13,7 @@ import Orders from "./pages/Orders";
 import Products from "./pages/Products";
 import Returns from "./pages/Returns";
 import Users from "./pages/Users";
+import PaymentVerification from "./pages/PaymentVerification";
 import Ads from "./pages/Ads";
 import Notifications from "./pages/Notifications";
 import Profile from "./pages/Profile";
@@ -84,6 +85,12 @@ function App() {
           path="/users"
           element={<Users />}
         />
+
+
+        <Route
+    path="/payment-verification"
+    element={<PaymentVerification />}
+/>
 
         <Route
           path="/ads"

@@ -9,6 +9,7 @@ import {
   FaCog,
   FaSignOutAlt,
   FaBullhorn,
+  FaMoneyCheckAlt,
 } from "react-icons/fa";
 
 import {
@@ -36,6 +37,12 @@ function Sidebar() {
     },
 
     {
+  name: "Payment Verification",
+  path: "/payment-verification",
+  icon: <FaMoneyCheckAlt />,
+},
+
+    {
       name: "Products",
       path: "/products",
       icon: <FaBoxOpen />,
@@ -52,6 +59,10 @@ function Sidebar() {
       path: "/users",
       icon: <FaUsers />,
     },
+
+    
+
+    
 
     // ✅ NEW ADS MENU
     {

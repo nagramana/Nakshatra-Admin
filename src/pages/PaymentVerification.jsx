@@ -52,11 +52,20 @@ function PaymentVerification() {
         )
     );
 
-    
+    const audioUnlocked = useRef(false);
 
 
 
-const playNotification = async () => {
+
+    const playNotification = async () => {
+
+    if (!audioUnlocked.current) {
+
+        console.log("🔇 Audio is not unlocked yet");
+
+        return;
+
+    }
 
     try {
 
@@ -66,19 +75,13 @@ const playNotification = async () => {
 
         notificationSound.current.volume = 1;
 
-        notificationSound.current.muted = false;
+        await notificationSound.current.play();
 
-        const playPromise = notificationSound.current.play();
-
-        if (playPromise !== undefined) {
-            await playPromise;
-        }
-
-        console.log("🔊 Notification Sound Played");
+        console.log("🔊 Notification Played");
 
     } catch (err) {
 
-        console.error("🔇 Audio Error:", err);
+        console.log("Notification Error", err);
 
     }
 
@@ -105,7 +108,7 @@ const playNotification = async () => {
 
         try {
 
-            notificationSound.current.muted = true;
+            notificationSound.current.volume = 0;
 
             await notificationSound.current.play();
 
@@ -113,27 +116,27 @@ const playNotification = async () => {
 
             notificationSound.current.currentTime = 0;
 
-            notificationSound.current.muted = false;
+            notificationSound.current.volume = 1;
 
-            console.log("✅ Audio Unlocked");
+            audioUnlocked.current = true;
 
-            // Remove the click listener after the first successful unlock
-            window.removeEventListener("click", unlockAudio);
+            console.log("✅ Audio Unlocked Successfully");
 
         } catch (err) {
 
-            console.log("🔇 Unlock Failed:", err);
+            console.log("Unlock Failed", err);
 
         }
 
     };
 
-    // Wait for the first click anywhere on the page
-    window.addEventListener("click", unlockAudio);
+    window.addEventListener("pointerdown", unlockAudio, {
+        once: true,
+    });
 
     return () => {
 
-        window.removeEventListener("click", unlockAudio);
+        window.removeEventListener("pointerdown", unlockAudio);
 
     };
 
